@@ -1,15 +1,17 @@
 <?php
 class memoryCache extends CacheInterface {
-	private $_memcached = null;
+	private $_memcached = null, $_timeToLive, $_memcachedServers;
 
 	public function __construct() {
 		if($this->_memcached == null) {
 			$this->_memcached = new Memcached();
 		}
+		$this->_timeToLive = isset($settings['timeToLive']) ? $settings['timeToLive'] : SimplePhpCacherConfig::TimeToLiveDefault;
+		$this->_memcachedServers = isset($settings['memcachedServers']) ? $settings['memcachedServers'] : SimplePhpCacherConfig::memcachedServersDefault();
 
 		$this->_memcached->setOption(Memcached::OPT_BINARY_PROTOCOL,true);
 
-		$servers = SimplePhpCacherConfig::memcacheServers();
+		$servers = $this->_memcachedServers;
 
 		// Check if servers are added otherwise add them.
 		$this->addServersIfNotAdded();
@@ -21,7 +23,7 @@ class memoryCache extends CacheInterface {
 			$addedHosts[$server['host']] = $server;
 		}
 		$serversToAdd = array();
-		foreach (SimplePhpCacherConfig::memcachedServers() as $server) {
+		foreach ($this->_memcachedServers as $server) {
 			array_push($serversToAdd, $server);
 		}
 		if(count($serversToAdd) > 0) {
@@ -40,7 +42,7 @@ class memoryCache extends CacheInterface {
 	}
 
 	public function setCached($key, $value) {
-		if(!$this->_memcached->add($key, json_encode($value), SimplePhpCacherConfig::TimeToLive)) {
+		if(!$this->_memcached->add($key, json_encode($value), $this->_timeToLive)) {
 			return false;
 		}
 		return true;

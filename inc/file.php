@@ -1,8 +1,12 @@
 <?php
 class fileCache extends CacheInterface {
-	public function __construct() {
-		if(!is_dir(SimplePhpCacherConfig::cacheDir())) {
-			if(!mkdir(SimplePhpCacherConfig::cacheDir())) {
+	private $_timeToLive, $_cacheDir;
+
+	public function __construct($settings) {
+		$this->_timeToLive = isset($settings['timeToLive']) ? $settings['timeToLive'] : SimplePhpCacherConfig::TimeToLiveDefault;
+		$this->_cacheDir = isset($settings['cacheDir']) ? $settings['cacheDir'] : SimplePhpCacherConfig::cacheDirDefault();
+		if(!is_dir($this->_cacheDir)) {
+			if(!mkdir($this->_cacheDir)) {
 				throw new Exception("Simple PHP CACHER error: file implementation is not working. Check file privelages");
 			}
 		}
@@ -11,9 +15,9 @@ class fileCache extends CacheInterface {
 	public function getCached($key, &$isFound) {
 		$isFound = false;
 		$value = false;
-		$cachefile = SimplePhpCacherConfig::cacheDir().'/_' . $key;
+		$cachefile = $this->_cacheDir.'/_' . $key;
 		// Read cachefile content if it exists
-		if(file_exists($cachefile) && filemtime($cachefile) + SimplePhpCacherConfig::TimeToLive > time()) {
+		if(file_exists($cachefile) && filemtime($cachefile) + $this->_timeToLive > time()) {
 			$fh = fopen($cachefile, 'r');
 			if(!$fh) {
 				throw new Exception('Simple PHP CACHER error: file implementation is not working. Check file privelages');
@@ -26,7 +30,7 @@ class fileCache extends CacheInterface {
 	}
 
 	public function setCached($key, $value) {
-		$cachefile = SimplePhpCacherConfig::cacheDir().'/_' . $key;
+		$cachefile = $this->_cacheDir.'/_' . $key;
 		$fh = fopen($cachefile, 'w');
 		if(!$fh) {
 			throw new Exception('Simple PHP CACHER error: file implementation is not working. Check file privelages');
@@ -38,7 +42,7 @@ class fileCache extends CacheInterface {
 
 	public function deleteCached($key) {
 		$value = false;
-		$cachefile = SimplePhpCacherConfig::cacheDir().'/_' . $key;
+		$cachefile = $this->_cacheDir.'/_' . $key;
 
 		if(file_exists($cachefile)) {
 			$value = unlink($cachefile);

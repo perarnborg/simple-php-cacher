@@ -1,6 +1,6 @@
 <?php
 class noCache extends CacheInterface {
-	public function __construct() {
+	public function __construct($settings) {
 	}
 
 	public function getCached($key, &$isFound) {

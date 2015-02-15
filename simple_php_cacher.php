@@ -12,11 +12,14 @@ require_once 'inc/memory.php';
 class SimplePhpCacher {
 	private $_cache;
 
-	public function __construct() {
-	    $this->_cache = $this->getCache();
+	public function __construct($implementation = SimplePhpCacherConfig::CacheImplementationDefault, $settings = array()) {
+		if(!$settings) {
+			$settings = SimplePhpCacherConfig::cacheSettingsDefault();
+		}
+	    $this->_cache = $this->getCache($implementation, $settings);
 	}
 
-	public function get($keys, &$isFound) {
+	public function get($keys, &$isFound = false) {
 		$isFound = false;
 		$key = $this->getCacheKey($keys);
 		return $this->_cache->getCached($key, $isFound);
@@ -41,7 +44,7 @@ class SimplePhpCacher {
 		return md5($key);
 	}
 
-	private function getCache() {
-		return SimplePhpCacherConfig::getCache();
+	private function getCache($implementation, $settings) {
+		return SimplePhpCacherConfig::getCache($implementation, $settings);
 	}
 }
